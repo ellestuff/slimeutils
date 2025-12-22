@@ -1,0 +1,13 @@
+{
+	"id": "slime_utils",
+	"name": "slimeutils.",
+	"author": ["slimestuff."],
+	"description": "Library mod used by ellejokers and other mods, adding an Upgrade mechanic, joker use buttons, and other utility functions",
+	"prefix": "slime_utils",
+	"badge_colour": "ff53a9",
+	"dependencies": [
+		"Steamodded (>=1.0.0~ALPHA-1404b)"
+	],
+	"main_file": "main.lua",
+	"version": "0.1.0"
+}

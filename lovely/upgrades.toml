@@ -1,0 +1,42 @@
+[manifest]
+version = "0.1.0"
+dump_lua = true
+priority = 0
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = 'for _, v in ipairs(info_queue) do'
+position = "before"
+payload = '''
+if (card) then
+	-- Upgrade support
+	if (_c.slime_upgrade and _c.discovered) then
+		--		[[ Upgrade Requirements ]]
+		info_queue[#info_queue+1] = {set = "Other", key = "slime_upgr_".._c.key, specific_vars = (_c.slime_upgrade.loc_vars and _c.slime_upgrade:loc_vars(card) or {}) }
+		
+		--		[[ Upgrade Preview ]]
+		local upgrade_center = SMODS.shallow_copy(G.P_CENTERS[_c.slime_upgrade.card]) -- Upgrade target
+		
+		-- Upgrade variable stuff
+		if (not upgrade_center.unlocked) then										-- Locked
+			upgrade_center = {set = "Other", key = "slime_upgr_locked"}
+		elseif (not upgrade_center.discovered) then									-- Not Discoverd
+			upgrade_center = {set = "Other", key = "slime_upgr_not_discovered"}
+		else																		-- Unlocked
+			upgrade_center.config = copy_table(upgrade_center.config) -- OG vars
+			local upgrade_vars = _c.slime_upgrade.values and _c.slime_upgrade:values(card) or {}
+			for k, v in pairs(upgrade_vars) do
+				upgrade_center.config.extra[k] = v
+			end
+			
+			-- Use correct localization
+			local upgrade_loc_values = upgrade_center:loc_vars({}, {ability = upgrade_center.config, config = {center = upgrade_center}}).vars
+			upgrade_center.loc_vars = function() return {vars = upgrade_loc_values} end
+		end
+
+		info_queue[#info_queue+1] = upgrade_center
+	end
+end
+'''
+match_indent = true
