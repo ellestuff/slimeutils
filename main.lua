@@ -61,6 +61,65 @@ function transform_joker(card, joker, vars, calculate)
 	end}))
 end
 
+-- Faster animation
+function transform_joker(card, joker, t)
+	--	t {
+	--		vars,
+	--		calculate,
+	--		end_sound,
+	--		shakes
+	--	}
+	t = t or {}
+	
+	-- Flip card
+	G.E_MANAGER:add_event(Event({
+		trigger = "after",
+		func = function()
+			card:flip()
+			play_sound('card1')
+			card:juice_up(.4,0.4)
+			return true
+	end}))
+	
+	-- Handle calculate effect *after* flipping card
+	if (t.calculate) then 
+		G.E_MANAGER:add_event(Event({
+			trigger = "after",
+			func = function()
+				t.calculate(card)
+				return true
+		end}))
+	end
+	
+	-- Give it a few shakes :33
+	if t.shakes then
+		for i=1,t.shakes do
+			G.E_MANAGER:add_event(Event({
+				trigger = "after",
+				delay = 2,
+				func = function()
+					card:juice_up(.8,0.8)
+					play_sound('tarot2')
+					return true
+			end}))
+		end
+	end
+	
+	-- Change joker
+	G.E_MANAGER:add_event(Event({
+		trigger = "after",
+		delay = 2,
+		func = function()
+			change_joker_ability(card, joker, t.vars)
+			
+			card:flip()
+			if t.end_sound then play_sound(t.end_sound) end
+			card:juice_up(.4,0.4)
+			
+			return true
+	end}))
+end
+
 -- Use button on jokers, copied and modified from the lobcorp mod
 local use_and_sell_buttonsref = G.UIDEF.use_and_sell_buttons
 function G.UIDEF.use_and_sell_buttons(card)
@@ -114,7 +173,7 @@ end
 		calculate(self, card)		- Actual active ability
 		can_use(self, card)			- Whether you can use the ability
 		should_close(self, card)	- Whether to un-highlight the card upon using the ability (Recommended for value changes)
-		name(card)	- (Optional) Different button name, instead of localized "Use"
+		name(card)					- (Optional) Different button name, instead of localized "Use"
 	}
 ]]
 G.FUNCS.slime_can_use_active = function(e)
@@ -205,7 +264,12 @@ G.FUNCS.slime_active_upgrade = function(e, mute, nosave)
 	
 	card.area:remove_from_highlighted(card)
 	
-	transform_joker(card, card.config.center.slime_upgrade.card, values, card.config.center.slime_upgrade.calculate)
+	transform_joker(card, card.config.center.slime_upgrade.card, {
+		vars = values,
+		calculate = card.config.center.slime_upgrade.calculate,
+		end_sound = 'tarot1',
+		shakes = 3
+	})
 end
 
 function table_create_badge(t)
