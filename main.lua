@@ -1,8 +1,18 @@
+slimeutils = {
+	-- Add to this if you want a custom cardarea with upgradable cards
+	upgrade_areas = {
+		'jokers',
+		'consumeables',
+		'hand'
+	}
+}
+
+
 -- Improved Card:set_ability() function, also handling values in the new ability
-function change_joker_ability(card, joker, vars)
+function slimeutils.change_ability(card, key, vars)
 	vars = vars or {}
-	if Cryptid ~= nil then card:set_ability(G.P_CENTERS[joker], true, nil)
-	else card:set_ability(joker) end
+	if Cryptid ~= nil then card:set_ability(G.P_CENTERS[key], true, nil)
+	else card:set_ability(key) end
 	card:set_cost() -- Update cost
 	
 	-- Carry over values from old joker if u want
@@ -13,95 +23,41 @@ function change_joker_ability(card, joker, vars)
 end
 
 -- Like change_joker_ability(), but with more juice :3
-function transform_joker(card, joker, vars, calculate)
-	-- Flip card
-	G.E_MANAGER:add_event(Event({
-		trigger = "after",
-		func = function()
-			card:flip()
-			play_sound('card1')
-			card:juice_up(.4,0.4)
-			return true
-	end}))
-	
-	-- Handle calculate effect *after* flipping card
-	if (calculate) then 
-		G.E_MANAGER:add_event(Event({
-			trigger = "after",
-			func = function()
-				calculate(card)
-				return true
-		end}))
-	end
-	
-	-- Give it a few shakes :33
-	for i=1,3 do
-		G.E_MANAGER:add_event(Event({
-			trigger = "after",
-			delay = 2,
-			func = function()
-				card:juice_up(.8,0.8)
-				play_sound('tarot2')
-				return true
-		end}))
-	end
-	
-	-- Change joker
-	G.E_MANAGER:add_event(Event({
-		trigger = "after",
-		delay = 2,
-		func = function()
-			change_joker_ability(card, joker, vars)
-			
-			card:flip()
-			play_sound('tarot1')
-			card:juice_up(.4,0.4)
-			
-			return true
-	end}))
-end
-
--- Faster animation
-function transform_joker(card, joker, t)
+function slimeutils.transform_card(card, key, t)
 	--	t {
 	--		vars,
 	--		calculate,
 	--		end_sound,
-	--		shakes
+	--		shake_sound,
+	--		shakes,
+	--		instant
 	--	}
 	t = t or {}
 	
-	-- Flip card
-	G.E_MANAGER:add_event(Event({
-		trigger = "after",
-		func = function()
-			card:flip()
-			play_sound('card1')
-			card:juice_up(.4,0.4)
-			return true
-	end}))
-	
-	-- Handle calculate effect *after* flipping card
-	if (t.calculate) then 
+	if (not t.instant) then
+		-- Flip card
 		G.E_MANAGER:add_event(Event({
 			trigger = "after",
 			func = function()
-				t.calculate(card)
+				card:flip()
+				play_sound('card1')
+				card:juice_up(.4,0.4)
 				return true
 		end}))
-	end
-	
-	-- Give it a few shakes :33
-	if t.shakes then
-		for i=1,t.shakes do
-			G.E_MANAGER:add_event(Event({
-				trigger = "after",
-				delay = 2,
-				func = function()
-					card:juice_up(.8,0.8)
-					play_sound('tarot2')
-					return true
-			end}))
+		
+		
+		-- Give it a few shakes :33
+		if t.shakes then
+			for i=1,t.shakes do
+				G.E_MANAGER:add_event(Event({
+					trigger = "after",
+					delay = 2,
+					func = function()
+						card:juice_up(.8,0.8)
+						play_sound(t.shake_sound or 'tarot2')
+						return true
+				end}))
+			end
 		end
 	end
 	
@@ -110,9 +66,19 @@ function transform_joker(card, joker, t)
 		trigger = "after",
 		delay = 2,
 		func = function()
-			change_joker_ability(card, joker, t.vars)
+			-- Handle calculate effect *after* flipping card
+			if (t.calculate) then 
+				G.E_MANAGER:add_event(Event({
+					trigger = "after",
+					func = function()
+						t.calculate(card)
+						return true
+				end}))
+			end
 			
-			card:flip()
+			slimeutils.change_ability(card, key, t.vars)
+			
+			if (not t.instant) then card:flip() end
 			if t.end_sound then play_sound(t.end_sound) end
 			card:juice_up(.4,0.4)
 			
@@ -142,29 +108,7 @@ function G.UIDEF.use_and_sell_buttons(card)
         )
     end
 	
-	if t and t.nodes[1] and card.config.center.slime_upgrade and type(card.config.center.slime_upgrade) == "table" then
-		
-		-- Make 3rd node for Upgrade Button
-        if (card.config.center.slime_active) then
-			table.insert(_nodes,{
-				nodes = {},
-				n = 4,
-				config = {
-					align= "cl",
-			}})
-		end
-		
-		table.insert(_nodes[#_nodes].nodes, 
-            {n=G.UIT.C, config={align = "cr"}, nodes={
-                {n=G.UIT.C, config={ref_table = card, align = "cr", maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 0.4, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'slime_active_upgrade', func = 'slime_can_upgrade'}, nodes={
-                    {n=G.UIT.B, config = {w=0.1,h=0.4}},
-                    {n=G.UIT.T, config={text = "UPGRADE",colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
-                }}
-            }}
-        )
-    end
-	
-    return t
+	return t
 end
 
 -- Use Button Functions
@@ -179,14 +123,15 @@ end
 G.FUNCS.slime_can_use_active = function(e)
     local card = e.config.ref_table
     local can_use = 
-    not (not skip_check and ((G.play and #G.play.cards > 0) or
-    (G.CONTROLLER.locked) or
-    (G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
-    G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
-    card.area == G.jokers and not card.debuff and
-	card.config.center.slime_active and
-    (not card.config.center.slime_active.can_use or card.config.center.slime_active:can_use(card))
-    if can_use then 
+		not (not skip_check and ((G.play and #G.play.cards > 0) or
+		(G.CONTROLLER.locked) or
+		(G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
+		G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
+		card.area == G.jokers and not card.debuff and
+		card.config.center.slime_active and
+		(not card.config.center.slime_active.can_use or card.config.center.slime_active:can_use(card))
+    
+	if can_use then 
         e.config.colour = G.C.RED
         e.config.button = 'slime_active_ability'
     else
@@ -203,8 +148,8 @@ G.FUNCS.slime_active_ability = function(e, mute, nosave)
         e.config.button = 'slime_active_ability'
     return true end }))
 
-	if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
-	if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
+	--if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
+	--if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
 	
     card.config.center.slime_active:calculate(card)
 	card.area:remove_from_highlighted(card)
@@ -229,24 +174,69 @@ end
 		can_use(self, card)	- Whether you can upgrade the card
 	}
 ]]
+local function create_upgrade_button_ui(card)
+	return UIBox {
+		definition = {
+			n = G.UIT.ROOT,
+			config = { colour = G.C.CLEAR },
+			nodes = {{
+				n = G.UIT.C,
+				config = {
+					align = 'cm',
+					padding = 0.15,
+					r = 0.08,
+					hover = true,
+					shadow = true,
+					button = 'slime_active_upgrade',
+					func = 'slime_can_upgrade',
+					ref_table = card,
+				},
+				nodes = {{
+					n = G.UIT.R,
+					nodes = {{
+						n = G.UIT.T,
+						config = {
+							text = localize("slime_upgrade"),
+							scale = 0.25,
+						}
+					}}
+				}}
+			}}
+		},
+		config = {
+			align = 'bm', -- position relative to the card, meaning "center left". Follow the SMODS UI guide for more alignment options
+			major = card,
+			parent = card,
+			offset = { x = 0, y = -0.05 } -- depends on the alignment you want, without an offset the button will look as if floating next to the card, instead of behind it
+		}
+	}
+	--[[return {n=G.UIT.C, config={align = "bm"}, nodes={
+		{n=G.UIT.C, config={ref_table = card, align = "bm", maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 0.4, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'slime_active_upgrade', func = 'slime_can_upgrade'}, nodes={
+			{n=G.UIT.B, config = {w=0.1,h=0.4}},
+			{n=G.UIT.T, config={text = "UPGRADE",colour = G.C.UI.TEXT_LIGHT, scale = 0.8, shadow = true}}
+		}}
+	}}]]
+end
+
 G.FUNCS.slime_can_upgrade = function(e)
-    local card = e.config.ref_table
-    local can_use = 
-    not (not skip_check and ((G.play and #G.play.cards > 0) or
-    (G.CONTROLLER.locked) or
-    (G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
-    G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
-    card.area == G.jokers and not card.debuff and
-	card.config.center.slime_upgrade and
-    (not card.config.center.slime_upgrade.can_use or card.config.center.slime_upgrade:can_use(card)) and
-	card.config.center.unlocked
-    if can_use then 
-        e.config.colour = HEX("ff53a9")
-        e.config.button = 'slime_active_upgrade'
-    else
-        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
-        e.config.button = nil
-    end
+	local card = e.config.ref_table
+	local can_use = 
+		not (not skip_check and ((G.play and #G.play.cards > 0) or
+		(G.CONTROLLER.locked) or
+		(G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
+		G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
+		not card.debuff and
+		card.config.center.slime_upgrade and
+		(not card.config.center.slime_upgrade.can_use or card.config.center.slime_upgrade:can_use(card)) and
+		card.config.center.unlocked
+	
+	if can_use then 
+		e.config.colour = G.C.BLUE
+		e.config.button = 'slime_active_upgrade'
+	else
+		e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+		e.config.button = nil
+	end
 end
 
 G.FUNCS.slime_active_upgrade = function(e, mute, nosave)
@@ -257,22 +247,24 @@ G.FUNCS.slime_active_upgrade = function(e, mute, nosave)
         e.config.button = 'slime_active_upgrade'
     return true end }))
 
-	if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
-	if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
+	--if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
+	--if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
 	
 	local values = card.config.center.slime_upgrade.values and card.config.center.slime_upgrade:values(card) or {}
 	
 	card.area:remove_from_highlighted(card)
 	
-	transform_joker(card, card.config.center.slime_upgrade.card, {
+	slimeutils.transform_card(card, card.config.center.slime_upgrade.card, {
 		vars = values,
 		calculate = card.config.center.slime_upgrade.calculate,
-		end_sound = 'tarot1',
+		shake_sound = 'multhit1',
+		end_sound = 'timpani',
 		shakes = 3
 	})
 end
 
-function table_create_badge(t)
+function slimeutils.table_create_badge(t)
+	t = t or {}
 	return create_badge(
 		t.text or "Badge",
 		t.colour or G.C.UI.TEXT_DARK,
@@ -281,7 +273,7 @@ function table_create_badge(t)
 	)
 end
 
-function get_hand_types(visible)
+function slimeutils.get_hand_types(visible)
 	local _poker_hands = {}
 	for handname, _ in pairs(G.GAME.hands) do
 		if SMODS.is_poker_hand_visible(handname) or not visible then
@@ -289,4 +281,31 @@ function get_hand_types(visible)
 		end
 	end
 	return _poker_hands
+end
+
+SMODS.DrawStep {
+	key = 'upgrade_button',
+	order = -30, -- before the Card is drawn
+	func = function(card, layer)
+		if card.children.slime_upgrade_button then
+			card.children.slime_upgrade_button:draw()
+		end
+	end
+}
+
+local highlight_ref = Card.highlight
+function Card.highlight(self, is_highlighted)
+	local area_check = false
+	for i,v in ipairs(slimeutils.upgrade_areas) do
+		if self.area == G[v] then area_check = true break end
+	end
+	
+	if is_highlighted and area_check and self.config.center.slime_upgrade then
+		self.children.slime_upgrade_button = create_upgrade_button_ui(self)
+	elseif self.children.slime_upgrade_button then
+		self.children.slime_upgrade_button:remove()
+		self.children.slime_upgrade_button = nil
+	end
+
+	return highlight_ref(self, is_highlighted)
 end

@@ -6,8 +6,7 @@ return {
 				text = {
 					"Unlock this card",
 					"to upgrade"
-				}
-			},
+			}},
 			slime_upgr_not_discovered = {
 				name = 'Not Discovered',
 				text = {
@@ -15,9 +14,11 @@ return {
 					"discover the upgrade",
 					"card to learn what",
 					"it upgrades into"
-				}
-			}
-		}
-	}
+			}}
+	}},
+	misc = {
+		dictionary = {
+			slime_upgrade = "UPGRADE CARD",
+	}}
 }
 

@@ -31,7 +31,7 @@ if (card) then
 			end
 			
 			-- Use correct localization
-			local upgrade_loc_values = upgrade_center:loc_vars({}, {ability = upgrade_center.config, config = {center = upgrade_center}}).vars
+			local upgrade_loc_values = upgrade_center.loc_vars and upgrade_center:loc_vars({}, {ability = upgrade_center.config, config = {center = upgrade_center}}).vars or {}
 			upgrade_center.loc_vars = function() return {vars = upgrade_loc_values} end
 		end
 
