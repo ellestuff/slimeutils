@@ -4,8 +4,84 @@ slimeutils = {
 		'jokers',
 		'consumeables',
 		'hand'
-	}
+	},
+	
+	-- Functions for drawing large soul sprites
+	large_soul = {}
 }
+
+-- Draw a soul sprite with different dimensions to the center
+function slimeutils.large_soul.draw(card, scale_mod, rotate_mod)
+	local spr = card.children.floating_sprite
+	if spr.ARGS then
+		if spr.ARGS.draw_from_offset then
+			spr.ARGS.draw_from_offset.x = spr.role.offset.x or 0
+			spr.ARGS.draw_from_offset.y = spr.role.offset.y or 0
+		end
+		if spr.ARGS.prep_shader then
+			spr.ARGS.prep_shader.cursor_pos.x = spr.role.offset.x
+			spr.ARGS.prep_shader.cursor_pos.y = spr.role.offset.y
+		end
+	end
+	
+	
+	
+	-- Shadow
+	spr:draw_shader(
+		'dissolve', 0, nil, nil,
+		card.children.center,
+		scale_mod, rotate_mod,
+		spr.role.offset.x,
+		spr.role.offset.y + 0.03*math.sin(1.8*G.TIMERS.REAL),
+		nil, 0.6)
+	
+	-- Not shadow
+	spr:draw_shader(
+		'dissolve', nil, nil, nil,
+		card.children.center,
+		scale_mod, rotate_mod,
+		spr.role.offset.x or 0,
+		spr.role.offset.y or 0)
+end
+
+-- Update a soul sprite with different dimensions to the center
+-- (Necessary due to cropping if put in the card draw func)
+-- Thanks to @thewintercomet for helping with this lol
+function slimeutils.large_soul.update(self,card)
+	if card.config.center.discovered or card.bypass_discovery_center then
+		local spr = card.children.floating_sprite
+		local float_atlas = G.ASSET_ATLAS[spr.atlas]
+		local center_atlas = G.ASSET_ATLAS[self.atlas]
+		spr.atlas = float_atlas
+		
+		spr:reset()
+		
+		local x_scale = float_atlas.px / center_atlas.px
+		local y_scale = float_atlas.py / center_atlas.py
+
+		spr.scale.x = card.children.center.scale.x*x_scale
+		spr.scale.y = card.children.center.scale.y*y_scale
+
+		local x_offset = (x_scale * card.T.w - card.T.w) / 2 * card.VT.scale
+		local y_offset = (y_scale * card.T.h - card.T.h) / 2 * card.VT.scale
+		spr.offset = {x = -x_offset, y = -y_offset}
+		spr.hover_offset = {x = -x_offset, y = -y_offset}
+		spr.click_offset = {x = -x_offset, y = -y_offset}
+		
+		spr:set_role({
+			--role_type = 'Minor',
+			offset = {x = -x_offset, y = -y_offset},
+			--hover_offset = {x = -x_offset, y = -y_offset},
+			--click_offset = {x = -x_offset, y = -y_offset},
+			major = card,
+			draw_major = card,
+			--xy_bond = 'Strong',
+			--wh_bond = 'Strong',
+			--r_bond = 'Strong',
+			scale_bond = 'Strong'
+		}) 
+	end
+end
 
 
 -- Improved Card:set_ability() function, also handling values in the new ability
@@ -86,6 +162,8 @@ function slimeutils.transform_card(card, key, t)
 	end}))
 end
 
+--#region Use Button Functions
+
 -- Use button on jokers, copied and modified from the lobcorp mod
 local use_and_sell_buttonsref = G.UIDEF.use_and_sell_buttons
 function G.UIDEF.use_and_sell_buttons(card)
@@ -111,15 +189,6 @@ function G.UIDEF.use_and_sell_buttons(card)
 	return t
 end
 
--- Use Button Functions
---[[	- Use button table format -
-	slime_active {
-		calculate(self, card)		- Actual active ability
-		can_use(self, card)			- Whether you can use the ability
-		should_close(self, card)	- Whether to un-highlight the card upon using the ability (Recommended for value changes)
-		name(card)					- (Optional) Different button name, instead of localized "Use"
-	}
-]]
 G.FUNCS.slime_can_use_active = function(e)
     local card = e.config.ref_table
     local can_use = 
@@ -156,25 +225,19 @@ G.FUNCS.slime_active_ability = function(e, mute, nosave)
 	
 	if (card.config.center.slime_active.should_close and not card.config.center.slime_active:should_close(card)) then card.area:add_to_highlighted(card) end
 end
+--#endregion
 
--- Upgrade Button Functions
---[[	- Upgrade button table format -
-	slime_upgrade {
-		card				- key of card it turns into
-		values(self, card)	- values to carry over
-			return{
-				<target_value> = value,
-				<target_value> = value
-			}
-			
-			eg:
-			xmult = 1 + card.ability.extra.mult * 0.1
-		}
-		calculate(self, card)	- What to do when upgrading, usually to fulfil the upgrade conditions
-		can_use(self, card)	- Whether you can upgrade the card
+--[[	- Use button table format -
+	slime_active {
+		calculate(self, card)		- Actual active ability
+		can_use(self, card)			- Whether you can use the ability
+		should_close(self, card)	- Whether to un-highlight the card upon using the ability (Recommended for value changes)
+		name(card)					- (Optional) Different button name, instead of localized "Use"
 	}
 ]]
-local function create_upgrade_button_ui(card)
+
+--#region Upgrade Button Functions
+function slimeutils.create_upgrade_button_ui(card)
 	return UIBox {
 		definition = {
 			n = G.UIT.ROOT,
@@ -210,12 +273,6 @@ local function create_upgrade_button_ui(card)
 			offset = { x = 0, y = -0.05 } -- depends on the alignment you want, without an offset the button will look as if floating next to the card, instead of behind it
 		}
 	}
-	--[[return {n=G.UIT.C, config={align = "bm"}, nodes={
-		{n=G.UIT.C, config={ref_table = card, align = "bm", maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 0.4, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'slime_active_upgrade', func = 'slime_can_upgrade'}, nodes={
-			{n=G.UIT.B, config = {w=0.1,h=0.4}},
-			{n=G.UIT.T, config={text = "UPGRADE",colour = G.C.UI.TEXT_LIGHT, scale = 0.8, shadow = true}}
-		}}
-	}}]]
 end
 
 G.FUNCS.slime_can_upgrade = function(e)
@@ -301,11 +358,40 @@ function Card.highlight(self, is_highlighted)
 	end
 	
 	if is_highlighted and area_check and self.config.center.slime_upgrade then
-		self.children.slime_upgrade_button = create_upgrade_button_ui(self)
+		self.children.slime_upgrade_button = slimeutils.create_upgrade_button_ui(self)
 	elseif self.children.slime_upgrade_button then
 		self.children.slime_upgrade_button:remove()
 		self.children.slime_upgrade_button = nil
 	end
 
 	return highlight_ref(self, is_highlighted)
+end
+--#endregion
+
+--[[	- Upgrade button table format -
+	slime_upgrade {
+		card				- key of card it turns into
+		values(self, card)	- values to carry over
+			return{
+				<target_value> = value,
+				<target_value> = value
+			}
+			
+			eg:
+			xmult = 1 + card.ability.extra.mult * 0.1
+		}
+		calculate(self, card)	- What to do when upgrading, usually to fulfil the upgrade conditions
+		can_use(self, card)	- Whether you can upgrade the card
+	}
+]]
+
+local stop_drag_hook = Card.stop_drag
+function Card:stop_drag()
+	stop_drag_hook(self)
+	SMODS.calculate_context {
+		slime_stop_drag = true,
+		card = self
+	}
+	-- Update hand when dragging card
+	if self.area == G.hand then G.hand:parse_highlighted() end
 end
