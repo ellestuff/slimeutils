@@ -5,6 +5,7 @@ slimeutils = {
 		'consumeables',
 		'hand'
 	},
+	is_transforming = false,
 	
 	-- Functions for drawing large soul sprites
 	large_soul = {}
@@ -13,6 +14,22 @@ slimeutils = {
 -- Draw a soul sprite with different dimensions to the center
 function slimeutils.large_soul.draw(card, scale_mod, rotate_mod)
 	local spr = card.children.floating_sprite
+	--print(spr.ARGS)
+	--[[
+		INFO - [G] Table:
+			prep_shader: Table:
+			cursor_pos: Table:
+				1: 1350.3778456189
+				2: 204.81240062842
+				y: -1.0186217708249
+				x: -1.3441345763848
+
+
+			draw_from_offset: Table:
+			y: -1.0186217708249
+			x: -1.3441345763848
+	]]
+
 	if spr.ARGS then
 		if spr.ARGS.draw_from_offset then
 			spr.ARGS.draw_from_offset.x = spr.role.offset.x or 0
@@ -21,10 +38,11 @@ function slimeutils.large_soul.draw(card, scale_mod, rotate_mod)
 		if spr.ARGS.prep_shader then
 			spr.ARGS.prep_shader.cursor_pos.x = spr.role.offset.x
 			spr.ARGS.prep_shader.cursor_pos.y = spr.role.offset.y
+			spr.ARGS.prep_shader.cursor_pos[1] = 0
+			spr.ARGS.prep_shader.cursor_pos[2] = 0
+
 		end
 	end
-	
-	
 	
 	-- Shadow
 	spr:draw_shader(
@@ -50,10 +68,9 @@ end
 function slimeutils.large_soul.update(self,card)
 	if card.config.center.discovered or card.bypass_discovery_center then
 		local spr = card.children.floating_sprite
-		local float_atlas = G.ASSET_ATLAS[spr.atlas]
+		local float_atlas = G.ASSET_ATLAS[spr.atlas.key]
 		local center_atlas = G.ASSET_ATLAS[self.atlas]
-		spr.atlas = float_atlas
-		
+
 		spr:reset()
 		
 		local x_scale = float_atlas.px / center_atlas.px
@@ -109,7 +126,7 @@ function slimeutils.transform_card(card, key, t)
 	--		instant
 	--	}
 	t = t or {}
-	
+	slimeutils.is_transforming = true
 	if (not t.instant) then
 		-- Flip card
 		G.E_MANAGER:add_event(Event({
@@ -157,7 +174,8 @@ function slimeutils.transform_card(card, key, t)
 			if (not t.instant) then card:flip() end
 			if t.end_sound then play_sound(t.end_sound) end
 			card:juice_up(.4,0.4)
-			
+
+			slimeutils.is_transforming = false
 			return true
 	end}))
 end
@@ -283,8 +301,9 @@ G.FUNCS.slime_can_upgrade = function(e)
 		(G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
 		G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
 		not card.debuff and
-		card.config.center.slime_upgrade and
-		(not card.config.center.slime_upgrade.can_use or card.config.center.slime_upgrade:can_use(card)) and
+		slimeutils.card_get_upgrade(card) and
+		slimeutils.can_upgrade_card(card) and
+		not (#G.E_MANAGER.queues.base > 1) and
 		card.config.center.unlocked
 	
 	if can_use then 
@@ -307,17 +326,24 @@ G.FUNCS.slime_active_upgrade = function(e, mute, nosave)
 	--if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
 	--if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
 	
-	local values = card.config.center.slime_upgrade.values and card.config.center.slime_upgrade:values(card) or {}
-	
+	local upgrade = slimeutils.card_get_upgrade(card)
+
+	local values = upgrade.values and upgrade:values(card) or {}
+
 	card.area:remove_from_highlighted(card)
 	
-	slimeutils.transform_card(card, card.config.center.slime_upgrade.card, {
+	slimeutils.transform_card(card, upgrade.card, {
 		vars = values,
-		calculate = card.config.center.slime_upgrade.calculate,
+		calculate = upgrade.calculate,
 		shake_sound = 'multhit1',
 		end_sound = 'timpani',
 		shakes = 3
 	})
+
+	SMODS.calculate_context {
+		slime_upgrade = true,
+		card = self
+	}
 end
 
 function slimeutils.table_create_badge(t)
@@ -350,6 +376,17 @@ SMODS.DrawStep {
 	end
 }
 
+function slimeutils.card_get_upgrade(card)
+	return card.config.center and card.config.center.slime_upgrade
+end
+
+function slimeutils.can_upgrade_card(card)
+	local upgr = slimeutils.card_get_upgrade(card)
+	if not upgr then return false end
+
+	return not upgr.can_use or upgr:can_use(card)
+end
+
 local highlight_ref = Card.highlight
 function Card.highlight(self, is_highlighted)
 	local area_check = false
@@ -357,7 +394,7 @@ function Card.highlight(self, is_highlighted)
 		if self.area == G[v] then area_check = true break end
 	end
 	
-	if is_highlighted and area_check and self.config.center.slime_upgrade then
+	if is_highlighted and area_check and slimeutils.card_get_upgrade(self) then
 		self.children.slime_upgrade_button = slimeutils.create_upgrade_button_ui(self)
 	elseif self.children.slime_upgrade_button then
 		self.children.slime_upgrade_button:remove()

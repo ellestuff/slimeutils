@@ -11,12 +11,13 @@ position = "before"
 payload = '''
 if (card) then
 	-- Upgrade support
-	if (_c.slime_upgrade and _c.discovered) then
+	local slime_upgrade = slimeutils.card_get_upgrade(card)
+	if (slime_upgrade and _c.discovered) then
 		--		[[ Upgrade Requirements ]]
-		info_queue[#info_queue+1] = {set = "Other", key = "slime_upgr_".._c.key, specific_vars = (_c.slime_upgrade.loc_vars and _c.slime_upgrade:loc_vars(card) or {}) }
+		info_queue[#info_queue+1] = {set = "Other", key = slime_upgrade.loc_key or ("slime_upgr_".._c.key), specific_vars = (slime_upgrade.loc_vars and slime_upgrade:loc_vars(card) or {}) }
 		
 		--		[[ Upgrade Preview ]]
-		local upgrade_center = SMODS.shallow_copy(G.P_CENTERS[_c.slime_upgrade.card]) -- Upgrade target
+		local upgrade_center = SMODS.shallow_copy(G.P_CENTERS[slime_upgrade.card]) -- Upgrade target
 		
 		-- Upgrade variable stuff
 		if (not upgrade_center.unlocked) then										-- Locked
@@ -25,7 +26,7 @@ if (card) then
 			upgrade_center = {set = "Other", key = "slime_upgr_not_discovered"}
 		else																		-- Unlocked
 			upgrade_center.config = copy_table(upgrade_center.config) -- OG vars
-			local upgrade_vars = _c.slime_upgrade.values and _c.slime_upgrade:values(card) or {}
+			local upgrade_vars = slime_upgrade.values and slime_upgrade:values(card) or {}
 			for k, v in pairs(upgrade_vars) do
 				upgrade_center.config.extra[k] = v
 			end
