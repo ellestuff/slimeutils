@@ -32,16 +32,16 @@ end
 -- Character Icons, based off @vman_2002's code
 local cardpopup_ref = G.UIDEF.card_h_popup
 function G.UIDEF.card_h_popup(card)
-    local ret_val = cardpopup_ref(card)
-    local obj = card.config.center
-    if obj then
+	local ret_val = cardpopup_ref(card)
+	local obj = card.config.center
+	if obj then
 		if (obj.slime_desc_icon) then
 			local scale = obj.slime_desc_icon.scale or 1
 			local obj = Sprite(0,0,scale,scale,G.ASSET_ATLAS[obj.slime_desc_icon.atlas], obj.slime_desc_icon.pos)
 			obj.states.drag.can = false
 			obj.config.no_fill = true
 			obj:juice_up(0.1,0.1)
-		
+
 			local tag = {
 				n = G.UIT.R,
 				config = { align = 'br', padding = scale*-0.5, no_fill = true },
@@ -55,6 +55,6 @@ function G.UIDEF.card_h_popup(card)
 			
 			table.insert(ret_val.nodes[1].nodes[1].nodes[1].nodes, tag)
 		end
-    end
-    return ret_val
+	end
+	return ret_val
 end

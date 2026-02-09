@@ -37,7 +37,43 @@ if (card) then
 		end
 
 		info_queue[#info_queue+1] = upgrade_center
+
 	end
+else
+	desc_nodes.slime_desc_icon = _c.slime_desc_icon
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''
+    info_tip_from_rows(v, v.name),
+  }}
+}}
+'''
+position = "after"
+payload = '''
+if (v.slime_desc_icon) then
+	local scale = (v.slime_desc_icon.scale or 1)*0.9
+	local obj = Sprite(0,0,scale,scale,G.ASSET_ATLAS[v.slime_desc_icon.atlas], v.slime_desc_icon.pos)
+	obj.states.drag.can = false
+	obj.config.no_fill = true
+	obj:juice_up(0.1,0.1)
+
+	local tag = {
+		n = G.UIT.R,
+		config = { align = 'tl', padding = scale*-0.5, no_fill = true },
+		nodes = {
+			{
+				n = G.UIT.O,
+				config = { object = obj }
+			}
+		}
+	}
+
+	table.insert(info_boxes[#info_boxes].nodes[1].nodes[1].nodes,1,tag)
 end
 '''
 match_indent = true
