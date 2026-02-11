@@ -56,7 +56,7 @@ pattern = '''
 position = "after"
 payload = '''
 if (v.slime_desc_icon) then
-	local scale = (v.slime_desc_icon.scale or 1)*0.9
+	local scale = (v.slime_desc_icon.scale or 1)*0.75
 	local obj = Sprite(0,0,scale,scale,G.ASSET_ATLAS[v.slime_desc_icon.atlas], v.slime_desc_icon.pos)
 	obj.states.drag.can = false
 	obj.config.no_fill = true
@@ -64,7 +64,7 @@ if (v.slime_desc_icon) then
 
 	local tag = {
 		n = G.UIT.R,
-		config = { align = 'tl', padding = scale*-0.5, no_fill = true },
+		config = { align = 'cl', padding = scale*-0.5, no_fill = true },
 		nodes = {
 			{
 				n = G.UIT.O,

@@ -164,7 +164,7 @@ G.FUNCS.slime_active_upgrade = function(e, mute, nosave)
 
 	SMODS.calculate_context {
 		slime_upgrade = true,
-		card = self
+		card = card
 	}
 end
 
