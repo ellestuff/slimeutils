@@ -26,7 +26,7 @@ function Card:stop_drag()
 		card = self
 	}
 	-- Update hand when dragging card
-	if self.area == G.hand then G.hand:parse_highlighted() end
+	if G.hand and self.area == G.hand then G.hand:parse_highlighted() end
 end
 
 -- Character Icons, based off @vman_2002's code
