@@ -34,7 +34,7 @@ local cardpopup_ref = G.UIDEF.card_h_popup
 function G.UIDEF.card_h_popup(card)
 	local ret_val = cardpopup_ref(card)
 	local obj = card.config.center
-	if obj and obj.slime_desc_icon then
+	if obj and obj.slime_desc_icon and obj.discovered then
 		local scale = obj.slime_desc_icon.scale or 1
 		local obj = Sprite(0,0,scale,scale,G.ASSET_ATLAS[obj.slime_desc_icon.atlas], obj.slime_desc_icon.pos)
 		obj.states.drag.can = false
