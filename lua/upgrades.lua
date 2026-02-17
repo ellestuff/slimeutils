@@ -148,24 +148,7 @@ G.FUNCS.slime_active_upgrade = function(e, mute, nosave)
 	--if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
 	--if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
 	
-	local upgrade = slimeutils.card_get_upgrade(card)
-
-	local values = upgrade.values and upgrade:values(card) or {}
-
-	card.area:remove_from_highlighted(card)
-	
-	slimeutils.transform_card(card, upgrade.card, {
-		vars = values,
-		calculate = upgrade.calculate,
-		shake_sound = 'multhit1',
-		end_sound = 'timpani',
-		shakes = 3
-	})
-
-	SMODS.calculate_context {
-		slime_upgrade = true,
-		card = card
-	}
+	slimeutils.upgrade_card(card)
 end
 
 SMODS.DrawStep {
@@ -204,4 +187,30 @@ function Card.highlight(self, is_highlighted)
 	end
 
 	return highlight_ref(self, is_highlighted)
+end
+
+function slimeutils.upgrade_card(card, bypass_requirements, bypass_lock)
+	local upgrade = slimeutils.card_get_upgrade(card)
+
+	bypass_requirements = bypass_requirements or false
+	bypass_lock = bypass_lock or (upgrade and upgrade.bypass_lock)
+
+	if not (upgrade and (slimeutils.can_upgrade_card(card) or bypass_requirements)) and not bypass_lock then return end
+
+	local values = upgrade.values and upgrade:values(card) or {}
+
+	card.area:remove_from_highlighted(card)
+	
+	slimeutils.transform_card(card, upgrade.card, {
+		vars = values,
+		calculate = upgrade.calculate,
+		shake_sound = 'multhit1',
+		end_sound = 'timpani',
+		shakes = 3
+	})
+
+	SMODS.calculate_context {
+		slime_upgrade = true,
+		card = card
+	}
 end
