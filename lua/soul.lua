@@ -1,3 +1,5 @@
+-- This shit does NOT work, sorry
+
 -- Draw a soul sprite with different dimensions to the center
 function slimeutils.large_soul.draw(card, scale_mod, rotate_mod)
 	local spr = card.children.floating_sprite

@@ -13,7 +13,7 @@ slimeutils = {
 
 --		[[ File List ]]
 local files = {
-	--"soul",
+	--"soul", -- this shit will need soooooo much reworking to get set up properly T~T
 	"upgrades",
 	"use",
 	"misc"
