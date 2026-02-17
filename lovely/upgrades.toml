@@ -17,14 +17,14 @@ if (card) then
 		info_queue[#info_queue+1] = {set = "Other", key = slime_upgrade.loc_key or ("slime_upgr_".._c.key), specific_vars = (slime_upgrade.loc_vars and slime_upgrade:loc_vars(card) or {}) }
 		
 		--		[[ Upgrade Preview ]]
-		local upgrade_center = SMODS.shallow_copy(G.P_CENTERS[slime_upgrade.card])		-- Upgrade target
+		local upgrade_center = SMODS.shallow_copy(G.P_CENTERS[slime_upgrade.card]) -- Upgrade target
 		
 		-- Upgrade variable stuff
-		if (not upgrade_center.unlocked and not slime_upgrade.bypass_lock) then			-- Locked
-			upgrade_center.card_type = "Locked"
-		elseif (not upgrade_center.unlocked or upgrade_center.discovered) then			-- Not Discoverd
+		if (not upgrade_center.unlocked and slime_upgrade.bypass_lock) then			-- Locked
+			upgrade_center = {set = "Other", key = "slime_upgr_locked"}
+		elseif (not upgrade_center.discovered) then									-- Not Discoverd
 			upgrade_center = {set = "Other", key = "slime_upgr_not_discovered"}
-		else																			-- Unlocked
+		else																		-- Unlocked
 			upgrade_center.config = copy_table(upgrade_center.config) -- OG vars
 			local upgrade_vars = slime_upgrade.values and slime_upgrade:values(card) or {}
 			for k, v in pairs(upgrade_vars) do
