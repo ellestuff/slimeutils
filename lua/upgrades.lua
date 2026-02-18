@@ -168,7 +168,7 @@ end
 function slimeutils.can_upgrade_card(card)
 	local upgr = slimeutils.card_get_upgrade(card)
 	if not upgr then return false end
-
+	if not upgr.bypass_lock and not G.P_CENTERS[upgr.card].unlocked then return false end
 	return not upgr.can_use or upgr:can_use(card)
 end
 

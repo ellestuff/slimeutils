@@ -20,7 +20,7 @@ if (card) then
 		local upgrade_center = SMODS.shallow_copy(G.P_CENTERS[slime_upgrade.card]) -- Upgrade target
 		
 		-- Upgrade variable stuff
-		if (not upgrade_center.unlocked and slime_upgrade.bypass_lock) then			-- Locked
+		if (not upgrade_center.unlocked and not slime_upgrade.bypass_lock) then		-- Locked
 			upgrade_center = {set = "Other", key = "slime_upgr_locked"}
 		elseif (not upgrade_center.discovered) then									-- Not Discoverd
 			upgrade_center = {set = "Other", key = "slime_upgr_not_discovered"}
