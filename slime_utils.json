@@ -6,9 +6,9 @@
 	"prefix": "slime_utils",
 	"badge_colour": "ff53a9",
 	"dependencies": [
-		"Steamodded (>=1.0.0~ALPHA-1404b)"
+		"Steamodded (>=1.0.0~BETA-1224a)"
 	],
 	"main_file": "main.lua",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"priority": -1
 }
