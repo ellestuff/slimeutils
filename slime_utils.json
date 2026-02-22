@@ -2,7 +2,7 @@
 	"id": "slime_utils",
 	"name": "slimeutils.",
 	"author": ["slimestuff."],
-	"description": "Library mod used by ellejokers and other mods, adding an Upgrade mechanic, joker use buttons, and other utility functions",
+	"description": "Library mod used by ellejokers and other mods, adding an Upgrade mechanic, joker use buttons, and other utility functions. Corner Icon code by VMan2002",
 	"prefix": "slime_utils",
 	"badge_colour": "ff53a9",
 	"dependencies": [

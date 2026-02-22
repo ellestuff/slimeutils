@@ -16,7 +16,8 @@ local files = {
 	--"soul", -- this shit will need soooooo much reworking to get set up properly T~T
 	"upgrades",
 	"use",
-	"misc"
+	"misc",
+	"config"
 }
 
 for i, v in ipairs(files) do

@@ -1,3 +1,10 @@
+function slimeutils.create_display_card(key)
+	local card = Card(G.ROOM.T.x,G.ROOM.T.y,G.CARD_W*.75,G.CARD_H*.75,nil,G.P_CENTERS[key], { bypass_discovery_center = true, bypass_discovery_ui = true })
+	card.no_ui = true
+	card.states.drag.can = false
+	return card
+end
+
 function slimeutils.table_create_badge(t)
 	t = t or {}
 	return create_badge(
