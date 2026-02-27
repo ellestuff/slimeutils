@@ -125,8 +125,7 @@ G.FUNCS.slime_can_upgrade = function(e)
 		not card.debuff and
 		slimeutils.card_get_upgrade(card) and
 		slimeutils.can_upgrade_card(card) and
-		not (#G.E_MANAGER.queues.base > 1) and
-		card.config.center.unlocked
+		not (#G.E_MANAGER.queues.base > 1)
 	
 	if can_use then 
 		e.config.colour = G.C.BLUE

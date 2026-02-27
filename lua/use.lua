@@ -11,7 +11,7 @@ function G.UIDEF.use_and_sell_buttons(card)
     if t and t.nodes[1] and card.config.center.slime_active and type(card.config.center.slime_active) == "table" then
         table.insert(_nodes[#_nodes].nodes, 
             {n=G.UIT.C, config={align = "cr"}, nodes={
-                {n=G.UIT.C, config={ref_table = card, align = "cr", maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 0.6, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'slime_active_ability', func = 'slime_can_use_active'}, nodes={
+                {n=G.UIT.C, config={ref_table = card, align = "cr", maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = (card.config.center.slime_active.h*0.6) or 0.6, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'slime_active_ability', func = 'slime_can_use_active'}, nodes={
                     {n=G.UIT.B, config = {w=0.1,h=0.6}},
                     {n=G.UIT.T, config={text = card.config.center.slime_active.name and card.config.center.slime_active:name(card) or localize('b_use'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
                 }}
