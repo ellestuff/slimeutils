@@ -9,6 +9,6 @@
 		"Steamodded (>=1.0.0~BETA-1224a)"
 	],
 	"main_file": "main.lua",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"priority": -1
 }
