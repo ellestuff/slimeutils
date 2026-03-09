@@ -63,3 +63,7 @@ function G.UIDEF.card_h_popup(card)
 	end
 	return ret_val
 end
+
+function slimeutils.card_obscured(card)
+	return not card.config.center.discovered and (card.ability.consumeable or card.config.center.unlocked) and not card.bypass_discovery_center
+end
