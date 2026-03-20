@@ -118,14 +118,10 @@ end
 G.FUNCS.slime_can_upgrade = function(e)
 	local card = e.config.ref_table
 	local can_use = 
-		not (not skip_check and ((G.play and #G.play.cards > 0) or
-		(G.CONTROLLER.locked) or
-		(G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
-		G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
 		not card.debuff and
 		slimeutils.card_get_upgrade(card) and
 		slimeutils.can_upgrade_card(card) and
-		not (#G.E_MANAGER.queues.base > 1)
+		#G.E_MANAGER.queues.base <= 1
 	
 	if can_use then 
 		e.config.colour = G.C.BLUE
@@ -166,8 +162,7 @@ end
 
 function slimeutils.can_upgrade_card(card)
 	local upgr = slimeutils.card_get_upgrade(card)
-	if not upgr then return false end
-	if not upgr.bypass_lock and not G.P_CENTERS[upgr.card].unlocked then return false end
+	if not (upgr and (upgr.bypass_lock or G.P_CENTERS[upgr.card].unlocked)) then return false end
 	return not upgr.can_use or upgr:can_use(card)
 end
 
