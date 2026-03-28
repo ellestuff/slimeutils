@@ -70,12 +70,6 @@ function love.update(dt)
 			stage = 1
 			stagetimer = 0
 			stageframe = 0
-
-			slimeutils.microgames.microgame = slimeutils.microgames.queue[1].microgame
-
-			if slimeutils.microgames.canvas then slimeutils.microgames.canvas:release() end
-			slimeutils.microgames.canvas = love.graphics.newCanvas(slimeutils.microgames.microgame.width and slimeutils.microgames.microgame.width*2 or 640, slimeutils.microgames.microgame.height and slimeutils.microgames.microgame.height*2 or 480)
-			slimeutils.microgames.microgame.init()
 		
 		-- End of Microgame Start Animation
 		elseif stage == 1 and (not slimeutils.microgames.anims.pre_game or stagetimer >= slimeutils.microgames.anims.durations.pre_game) then
@@ -101,12 +95,6 @@ function love.update(dt)
 			-- Reset Cycle
 			if #slimeutils.microgames.queue>0 then
 				stage = 1
-
-				slimeutils.microgames.microgame = slimeutils.microgames.queue[1].microgame
-
-				if slimeutils.microgames.canvas then slimeutils.microgames.canvas:release() end
-				slimeutils.microgames.canvas = love.graphics.newCanvas(slimeutils.microgames.microgame.width and slimeutils.microgames.microgame.width*2 or 640, slimeutils.microgames.microgame.height and slimeutils.microgames.microgame.height*2 or 480)
-				slimeutils.microgames.microgame.init()
 			else
 				stage = 4
 				slimeutils.microgames.microgame = nil
@@ -118,6 +106,15 @@ function love.update(dt)
 		-- End of Finish Animation
 		elseif stage == 4 and (not slimeutils.microgames.anims.finish or stagetimer >= slimeutils.microgames.anims.durations.finish) then
 			slimeutils.microgames.running = false
+		end
+
+		-- Init microgame
+		if stage == 1 and stageframe == 0 then
+			slimeutils.microgames.microgame = slimeutils.microgames.queue[1].microgame
+
+			if slimeutils.microgames.canvas then slimeutils.microgames.canvas:release() end
+			slimeutils.microgames.canvas = love.graphics.newCanvas(slimeutils.microgames.microgame.width and slimeutils.microgames.microgame.width*2 or 640, slimeutils.microgames.microgame.height and slimeutils.microgames.microgame.height*2 or 480)
+			slimeutils.microgames.microgame.init()
 		end
 
 		stagetimer = stagetimer + dt
