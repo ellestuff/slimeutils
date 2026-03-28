@@ -38,27 +38,24 @@ function slimeutils.microgames:init(queue,anims)
 
 	self.hits = 0
 
-	stage = 0
+	stage = self.anims.start and 0 or 1
 	stagetimer = 0
 	stageframe = 0
 	
-	-- Make Microgame if no animation
-	if not self.anims.start then
-		stage = 1
-
-		slimeutils.microgames.microgame = slimeutils.microgames.queue[1].microgame
-
-		if slimeutils.microgames.canvas then slimeutils.microgames.canvas:release() end
-		slimeutils.microgames.canvas = love.graphics.newCanvas(slimeutils.microgames.microgame.width and slimeutils.microgames.microgame.width*2 or 640, slimeutils.microgames.microgame.height and slimeutils.microgames.microgame.height*2 or 480)
-		slimeutils.microgames.microgame.init()
-	end
-
 	G.E_MANAGER:add_event(Event({func = function()
 		return not self.running
 	end}))
 end
 
 local animslist = {"start","pre_game","play","post_game","finish"}
+
+local function setTimer()
+	-- Timer stuff
+	slimeutils.microgames.timer = stagetimer
+
+	if stage == 1 then slimeutils.microgames.timer = slimeutils.microgames.timer - (slimeutils.microgames.anims.durations.pre_game or 0)
+	elseif stage == 3 then slimeutils.microgames.timer = slimeutils.microgames.timer + (slimeutils.microgames.microgame.duration or 0) end
+end
 
 if not love.update then function love.update(dt) end end
 local update_hook = love.update
@@ -77,7 +74,7 @@ function love.update(dt)
 			stagetimer = 0
 			stageframe = 0
 			slimeutils.microgames.playing = true
-			slimeutils.microgames.microgame.start()
+			if slimeutils.microgames.microgame.start then slimeutils.microgames.microgame.start() end
 		-- End of Microgame
 		elseif stage == 2 and stagetimer >= slimeutils.microgames.microgame.duration then
 			stage = 3
@@ -110,11 +107,13 @@ function love.update(dt)
 
 		-- Init microgame
 		if stage == 1 and stageframe == 0 then
+			setTimer()
+
 			slimeutils.microgames.microgame = slimeutils.microgames.queue[1].microgame
 
 			if slimeutils.microgames.canvas then slimeutils.microgames.canvas:release() end
 			slimeutils.microgames.canvas = love.graphics.newCanvas(slimeutils.microgames.microgame.width and slimeutils.microgames.microgame.width*2 or 640, slimeutils.microgames.microgame.height and slimeutils.microgames.microgame.height*2 or 480)
-			slimeutils.microgames.microgame.init()
+			if slimeutils.microgames.microgame.init then slimeutils.microgames.microgame.init() end
 		end
 
 		stagetimer = stagetimer + dt
@@ -122,13 +121,8 @@ function love.update(dt)
 
 		-- Microgame :33
 		if slimeutils.microgames.microgame then
-			-- Timer stuff
-			slimeutils.microgames.timer = stagetimer
-
-			if stage == 1 then slimeutils.microgames.timer = slimeutils.microgames.timer - (slimeutils.microgames.anims.durations.pre_game or 0)
-			elseif stage == 3 then slimeutils.microgames.timer = slimeutils.microgames.timer + (slimeutils.microgames.microgame.duration or 0) end
-
-			slimeutils.microgames.microgame.update(dt)
+			setTimer()
+			if slimeutils.microgames.microgame.update then slimeutils.microgames.microgame.update(dt) end
 		end
 	end
 end
