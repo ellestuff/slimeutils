@@ -17,7 +17,8 @@ local files = {
 	"upgrades",
 	"use",
 	"misc",
-	"config"
+	"config",
+	"microgames"
 }
 
 for i, v in ipairs(files) do
