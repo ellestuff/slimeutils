@@ -38,6 +38,8 @@ function slimeutils.microgames:init(queue,anims)
 
 	self.hits = 0
 
+	G.CONTROLLER.locks.slime_microgame = true
+
 	stage = self.anims.start and 0 or 1
 	stagetimer = 0
 	stageframe = 0
@@ -103,6 +105,7 @@ function love.update(dt)
 		-- End of Finish Animation
 		elseif stage == 4 and (not slimeutils.microgames.anims.finish or stagetimer >= slimeutils.microgames.anims.durations.finish) then
 			slimeutils.microgames.running = false
+			G.CONTROLLER.locks.slime_microgame = false
 		end
 
 		-- Init microgame
