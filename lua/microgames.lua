@@ -36,8 +36,6 @@ function slimeutils.microgames:init(queue,anims)
 	self.queue = queue
 	self.anims = anims or {}
 
-	self.hits = 0
-
 	G.CONTROLLER.locks.slime_microgame = true
 
 	stage = self.anims.start and 0 or 1
