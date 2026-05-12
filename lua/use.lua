@@ -22,14 +22,18 @@ function G.UIDEF.use_and_sell_buttons(card)
 	return t
 end
 
+function slimeutils.can_use(card,area)
+    return not (not skip_check and ((G.play and #G.play.cards > 0) or
+    (G.CONTROLLER.locked) or
+    (G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
+    G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
+    card.area == area and not card.debuff
+end
+
 G.FUNCS.slime_can_use_active = function(e)
     local card = e.config.ref_table
     local can_use = 
-		not (not skip_check and ((G.play and #G.play.cards > 0) or
-		(G.CONTROLLER.locked) or
-		(G.GAME.STOP_USE and G.GAME.STOP_USE > 0))) and
-		G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT and
-		card.area == G.jokers and not card.debuff and
+		slimeutils.can_use(card,G.jokers) and
 		card.config.center.slime_active and
 		(not card.config.center.slime_active.can_use or card.config.center.slime_active:can_use(card))
     
